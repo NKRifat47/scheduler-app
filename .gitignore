@@ -23,6 +23,7 @@ scheduler-app
 *.njsproj
 *.sln
 *.sw?
+.air.toml
 
 # OS files
 Thumbs.db
