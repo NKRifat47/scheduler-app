@@ -6,29 +6,23 @@ import (
 	"scheduler-app/rest/handlers/user"
 	"scheduler-app/util"
 	"strconv"
-	"strings"
 )
 
 // DeleteTaskHandler deletes a specific task
 func (h *Handler) DeleteTaskHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodDelete {
-		util.SendError(w, http.StatusMethodNotAllowed, "Method not allowed")
-		return
-	}
-
 	userID := user.GetUserID(r)
 	if userID == 0 {
 		util.SendError(w, http.StatusUnauthorized, "Unauthorized")
 		return
 	}
 
-	parts := strings.Split(r.URL.Path, "/")
-	if len(parts) < 4 {
+	taskIDStr := r.PathValue("id")
+	if taskIDStr == "" {
 		util.SendError(w, http.StatusBadRequest, "Missing task ID")
 		return
 	}
 
-	taskID, err := strconv.Atoi(parts[3])
+	taskID, err := strconv.Atoi(taskIDStr)
 	if err != nil {
 		util.SendError(w, http.StatusBadRequest, "Invalid task ID")
 		return

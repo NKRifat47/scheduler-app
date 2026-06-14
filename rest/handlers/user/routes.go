@@ -3,11 +3,12 @@ package user
 import "net/http"
 
 
-func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
+type Router interface {
+	HandleFunc(pattern string, handler func(http.ResponseWriter, *http.Request))
+}
 
-	mux.HandleFunc("/api/signup", h.SignupHandler)
-
-	mux.HandleFunc("/api/login", h.LoginHandler)
-
-	mux.HandleFunc("/api/logout", h.LogoutHandler)
+func (h *Handler) RegisterRoutes(router Router) {
+	router.HandleFunc("POST /signup", h.SignupHandler)
+	router.HandleFunc("POST /login", h.LoginHandler)
+	router.HandleFunc("POST /logout", h.LogoutHandler)
 }

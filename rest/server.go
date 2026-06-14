@@ -9,6 +9,7 @@ import (
 	"scheduler-app/rest/handlers/user"
 	"scheduler-app/rest/middleware"
 	"strconv"
+	"strings"
 )
 
 type Server struct {
@@ -25,6 +26,27 @@ func NewServer(cnf *config.Config, userHandler *user.Handler, taskHandler *tasks
 	}
 }
 
+type ApiRouter struct {
+	mux    *http.ServeMux
+	prefix string
+}
+
+func (ar *ApiRouter) prefixPattern(pattern string) string {
+	parts := strings.SplitN(pattern, " ", 2)
+	if len(parts) == 2 {
+		return parts[0] + " " + ar.prefix + parts[1]
+	}
+	return ar.prefix + pattern
+}
+
+func (ar *ApiRouter) Handle(pattern string, handler http.Handler) {
+	ar.mux.Handle(ar.prefixPattern(pattern), handler)
+}
+
+func (ar *ApiRouter) HandleFunc(pattern string, handler func(http.ResponseWriter, *http.Request)) {
+	ar.mux.HandleFunc(ar.prefixPattern(pattern), handler)
+}
+
 func (server *Server) Start() {
 	manager := middleware.NewManager()
 	manager.Use(
@@ -35,9 +57,14 @@ func (server *Server) Start() {
 
 	mux := http.NewServeMux()
 
+	apiRouter := &ApiRouter{
+		mux:    mux,
+		prefix: "/api",
+	}
+
 	// Register Routes
-	server.userHandler.RegisterRoutes(mux)
-	server.taskHandler.RegisterRoutes(mux, manager)
+	server.userHandler.RegisterRoutes(apiRouter)
+	server.taskHandler.RegisterRoutes(apiRouter, manager)
 
 	// Static File Server
 	_ = os.MkdirAll("./static", 0755)

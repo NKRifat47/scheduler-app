@@ -5,18 +5,27 @@ import (
 	"scheduler-app/rest/middleware"
 )
 
-func (h *Handler) RegisterRoutes(mux *http.ServeMux, manager *middleware.Manager) {
-	mux.Handle("/api/tasks", manager.With(
+type Router interface {
+	Handle(pattern string, handler http.Handler)
+}
+
+func (h *Handler) RegisterRoutes(router Router, manager *middleware.Manager) {
+	router.Handle("GET /tasks", manager.With(
 		http.HandlerFunc(h.GetAllTasks),
 		h.middleware.AuthenticateJWT,
 	))
 
-	mux.Handle("/api/tasks/", manager.With(
+	router.Handle("POST /tasks", manager.With(
+		http.HandlerFunc(h.CreateTask),
+		h.middleware.AuthenticateJWT,
+	))
+
+	router.Handle("DELETE /tasks/{id}", manager.With(
 		http.HandlerFunc(h.DeleteTaskHandler),
 		h.middleware.AuthenticateJWT,
 	))
 
-	mux.Handle("/api/events", manager.With(
+	router.Handle("GET /events", manager.With(
 		http.HandlerFunc(h.RealtimeHandler),
 		h.middleware.AuthenticateJWT,
 	))
